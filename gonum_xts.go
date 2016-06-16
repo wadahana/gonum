@@ -50,9 +50,14 @@ func NewXts(index []time.Time, m *Matrix) *Xts {
     return &xts;
 }
 
-func (this* Xts) String() string {
+func (this *Xts) String() string {
     var s string;
     m := this.matrix;
+    for _, name := range this.names {
+        s = s + name + ", ";
+    }
+    s = s + "\n";
+
     for r := 0; r < m.row_num; r++ {
         s = s + this.index[r].Format("2006-01-02 15:04:05") + ", ";
         for c := 0; c < m.col_num; c++ {
@@ -63,22 +68,40 @@ func (this* Xts) String() string {
     return s;
 }
 
-func (this* Xts)GetRowNum() int {
+func (this *Xts)GetRowNum() int {
     return this.matrix.GetRowNum();
 }
 
-func (this* Xts) GetColumeNum() int {
+func (this *Xts) GetColumeNum() int {
     return this.matrix.GetColumeNum();
 }
 
-func (this* Xts) GetNames() []string {
+func (this *Xts) GetNames() []string {
     return this.names;
 }
 
-func (this* Xts) SetNames(n ... string) {
-    if len(n) < len(this.names) {
+func (this *Xts) SetNames(n ... string) {
+    if len(n) <= len(this.names) {
         for i := 0; i < len(n); i++ {
             this.names[i] = n[i];
         }
     }
 }
+
+func (this *Xts) GetColumes(cols []int) *Xts {
+
+    sub := this.matrix.GetColumes(cols);
+
+    xts := Xts{};
+    xts.matrix = sub;
+    xts.index = make([]time.Time, sub.row_num, sub.row_num);
+    copy(xts.index, this.index);
+    xts.names = make([]string, sub.col_num, sub.col_num);
+    for i, c := range cols {
+        xts.names[i] = this.names[c];
+    }
+    return &xts;
+}
+// func (this* Xts) RBind(other *Xts) {
+//
+// }

@@ -2,7 +2,7 @@ package gonum
 
 import (
     "fmt"
-    "time"
+//    "time"
     "testing"
 )
 
@@ -66,36 +66,27 @@ func Test_Matrix(t *testing.T) {
         data = append(data, col2[i]);
         data = append(data, col3[i]);
     }
-    m := NewMatrix(10,3,data);
+    m1 := NewMatrix(10,3,data);
+
     fmt.Printf("Raw:\n");
-    fmt.Printf("%v\n", m);
-    m.SwapRow(1,9);
+    fmt.Printf("%v\n", m1);
+
+    cols := []int{0,2};
+    m2 := m1.GetColumes(cols);
+
+    fmt.Printf("Extract Submatrix\n");
+    fmt.Printf("%v\n", m2);
+
+    m4 := m1.RBind(m1);
+    fmt.Printf("After RBind:\n");
+    fmt.Printf("%v\n", m4);
+
+    m3 := m1.CBind(m2);
+    fmt.Printf("After CBind:\n");
+    fmt.Printf("%v\n", m3);
+
+    m1.SwapRow(1,9);
     fmt.Printf("After Swap(1,9):\n");
-    fmt.Printf("%v\n", m);
-}
+    fmt.Printf("%v\n", m1);
 
-func Test_Xts(t *testing.T) {
-    ll := make([]time.Time, 0);
-    data := make([]float64, 0);
-    fmt.Printf("Raw:\n");
-    for i := 0; i < 10; i++ {
-        data = append(data, col1[i]);
-        data = append(data, col2[i]);
-        data = append(data, col3[i]);
-
-        date, _ := time.Parse("2006-01-02", dates[i]);
-        ll = append(ll, date);
-
-        fmt.Printf("%v, %0.4f, %0.4f, %0.4f\n", date.Format("2006-01-02 15:04:05"), col1[i], col2[i], col3[i]);
-    }
-    m := NewMatrix(10,3,data);
-
-    xts := NewXts(ll, m);
-    fmt.Printf("Xts:\n%v\n", xts);
-
-    names := xts.GetNames();
-    fmt.Printf("names:\n%v\n", names);
-    xts.SetNames("One", "Two");
-    names = xts.GetNames();
-    fmt.Printf("names:\n%v\n", names);
 }
