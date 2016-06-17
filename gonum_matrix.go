@@ -40,7 +40,7 @@ func (m *Matrix) GetElementNum() int {
 }
 
 func (m *Matrix) Get(row, col int) float64 {
-	i := row + m.row_num*col;
+	i := row * m.col_num + col;
 	return m.data[i]
 }
 
@@ -66,7 +66,6 @@ func (m *Matrix) GetColumes(cols []int) *Matrix {
             data = append(data, m.data[index]);
         }
     }
-
     sub := NewMatrix(m.row_num, len(cols), data);
     return sub;
 }
