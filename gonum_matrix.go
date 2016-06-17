@@ -49,8 +49,20 @@ func (m *Matrix) Set(row, col int, v float64) {
     m.data[i] = v;
 }
 
-func (m *Matrix) GetRawData() *[]float64 {
+func (m *Matrix) getPtr() *[]float64 {
     return &(m.data);
+}
+
+func (m *Matrix) GetRow(row int) []float64 {
+    if row >= m.GetRowNum() {
+        panic("GetRow, row index large than row_num");
+    }
+    i := row * m.row_num;
+    return m.data[i : i + m.col_num];
+}
+
+func (m *Matrix) GetData() []float64 {
+    return m.data;
 }
 
 func (m *Matrix) GetColumes(cols []int) *Matrix {
