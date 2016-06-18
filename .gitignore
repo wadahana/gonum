@@ -2,4 +2,8 @@
 .tags
 tags
 *.log
+*.o
+blas/example/bin
+blas/example/objs
 blas/target
+
