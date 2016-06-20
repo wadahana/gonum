@@ -27,6 +27,23 @@ func Test_NewXts(t *testing.T) {
         }
     }
     t.Logf("\n%v[%d,%d]\n", xts, xts.GetRowNum(), xts.GetColumeNum());
+
+    names := xts.GetNames();
+    if strings.Compare(names[0], "Colume.1") != 0 ||
+        strings.Compare(names[1], "Colume.2") != 0 ||
+        strings.Compare(names[2], "Colume.3") != 0 {
+        t.Errorf("xts default colume name test fail.");
+    }
+    fmt.Printf("default names:\n%v\n", names);
+
+    xts.SetNames("First", "Second", "Third");
+    names = xts.GetNames();
+    if strings.Compare(names[0], "First") != 0 ||
+        strings.Compare(names[1], "Second") != 0 ||
+        strings.Compare(names[2], "Third") != 0 {
+        t.Errorf("xts setname / getname test fail.");
+    }
+    fmt.Printf("names:\n%v\n", names);
 }
 
 func Test_Xts_RBind(t *testing.T) {
@@ -144,25 +161,8 @@ func Test_Xts_CBind(t *testing.T) {
 //     xts := NewXts(ll, m);
 //     fmt.Printf("Xts:\n%v\n", xts);
 //
-//     names := xts.GetNames();
-//     fmt.Printf("names:\n%v\n", names);
-//     xts.SetNames("One", "Two");
-//     names = xts.GetNames();
-//     fmt.Printf("names:\n%v\n", names);
+
 // }
-
-func Test_Xts(t *testing.T) {
-//    xts1 := newXtsFromCSV("./sh600688.csv");
-//    xts2 := newXtsFromCSV("./sh601988.csv");
-
-//    fmt.Printf("xts1: \n%v", xts1);
-//    fmt.Printf("xts2: \n%v", xts2);
-
-//    fmt.Printf("%d, %d\n", xts1.GetRowNum(), xts2.GetRowNum());
-
-//    sub1 := xts1.GetColumes([]int{1,2,3});
-//    fmt.Printf("sub1: \n%v", sub1);
-}
 
 func newXtsFromCSV(filename string) *Xts {
     inp, err := os.Open(filename);

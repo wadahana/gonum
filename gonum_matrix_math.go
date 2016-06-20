@@ -26,22 +26,6 @@ func (m *Matrix) Diff(lag int) *Matrix {
     return dm;
 }
 
-//     var i1 int = 0;
-//     var i2 int = 0;
-//     var lag2 int = lag * col_num;
-//     for row := 0; row < row_num - lag; row += 1 {
-//         for col := 0; col < col_num; col += 1 {
-//             v1 := m.data[i2];
-//             v2 := m.data[i2 + lag2];
-//             data[i1] = v2 - v1;
-//             i1 += 1;
-//             i2 += 1;
-//         }
-//     }
-//     dm := NewMatrix(row_num - lag, col_num, data);
-//     return dm;
-// }
-
 func (m *Matrix) Log() *Matrix {
     size := m.GetRowNum() * m.GetColumeNum();
     new_data := make([]float64, size, size);
