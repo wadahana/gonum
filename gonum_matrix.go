@@ -54,6 +54,7 @@ func (m *Matrix) getPtr() *[]float64 {
     return &(m.data);
 }
 
+
 func (m *Matrix) GetColumeData(col int) []float64 {
     if col >= m.GetColumeNum() {
         panic("GetColumeData, col index large than matrix's col_num");
