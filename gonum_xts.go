@@ -49,7 +49,7 @@ func newXtsNoSort(index []time.Time, m *Matrix) *Xts {
     copy(xts.index, index);
     xts.names = make([]string, cols, cols);
     for i := 0; i < cols; i++ {
-        xts.names[i] = fmt.Sprintf("Colume.%d", i);
+        xts.names[i] = fmt.Sprintf("Colume.%d", i + 1);
     }
 //    xts.matrix = m.Copy();
     xts.matrix = m;
@@ -81,6 +81,11 @@ func (this *Xts) SetNames(n ... string) {
 func (this *Xts) GetColumeData(col int) []float64 {
     return this.matrix.GetColumeData(col);
 }
+
+func (this *Xts) GetData() []float64 {
+    return this.matrix.GetData();
+}
+
 func (this *Xts) Get(row, col int) float64 {
     return this.matrix.Get(row, col);
 }
@@ -270,26 +275,3 @@ func (this *Xts) String() string {
     }
     return s;
 }
-
-/* * *
-  check two xts has the same time index.
-* * */
-// func (this *Xts) HasSameTime(other *Xts) bool {
-//     t1 := this.index;
-//     t2 := other.index;
-//     size := len(t1);
-//     if size == len(t2) {
-//         i := 0;
-//         j := 0;
-//         for i < size && j < size {
-//             if t1[i].Equal(t2[j]) {
-//                 return true;
-//             } else if t1[i].Before(t2.[j]) {
-//                 i += 1
-//             } else {
-//                 j += 1;
-//             }
-//         }
-//     }
-//     return false;
-// }

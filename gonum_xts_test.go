@@ -9,6 +9,7 @@ import (
     "strconv"
     "encoding/csv"
     "testing"
+    "math"
 )
 
 func Test_NewXts(t *testing.T) {
@@ -141,28 +142,53 @@ func Test_Xts_CBind(t *testing.T) {
     t.Logf("\n%v[%d,%d]\n", xts4, xts4.GetRowNum(), xts4.GetColumeNum());
     t.Logf("\n%v[%d,%d]\n", xts5, xts5.GetRowNum(), xts5.GetColumeNum());
 }
-// func Test_Xts(t *testing.T) {
-//     ll := make([]time.Time, 0);
-//     data := make([]float64, 0);
-//     fmt.Printf("Raw:\n");
-//
-//     for i := 0; i < 10; i++ {
-//         data = append(data, col1[i]);
-//         data = append(data, col2[i]);
-//         data = append(data, col3[i]);
-//
-//         date, _ := time.Parse("2006-01-02", dates[i]);
-//         ll = append(ll, date);
-//
-//         fmt.Printf("%v, %0.4f, %0.4f, %0.4f\n", date.Format("2006-01-02 15:04:05"), col1[i], col2[i], col3[i]);
-//     }
-//     m := NewMatrix(10,3,data);
-//
-//     xts := NewXts(ll, m);
-//     fmt.Printf("Xts:\n%v\n", xts);
-//
 
-// }
+/*
+    m<-c(1,2,3,4,5,6,7,8,9,10,112.1,933.1,403.5,334.4,677.1,500.6,253.3,744.3,801.8,108.2,10,8,3,2,5,4,1,6,7,9)
+*/
+func Test_Xts_Math(t *testing.T) {
+    m := testcase_NewMatrix();
+    times := make([]time.Time, 0);
+    for _, s := range dates {
+        d , _ := time.Parse("2006-01-02", s);
+        times = append(times, d);
+    }
+    xts := NewXts(times, m);
+
+    d1 := xts.Diff(1);
+    d3 := xts.Diff(3);
+
+    t.Logf("\n%v[%d,%d]\n", d1, d1.GetRowNum(), d1.GetColumeNum());
+    t.Logf("\n%v[%d,%d]\n", d3, d3.GetRowNum(), d3.GetColumeNum());
+
+    d1_ok := [30]float64 {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 821.0, -529.6, -69.1, 342.7, -176.5, -247.3, 491.0, 57.5, -693.6, 0, -2, -5, -1, 3, -1, -3, 5, 1, 2};
+    d1_ok[0] = math.NaN();
+    d1_ok[10] = math.NaN();
+    d1_ok[20] = math.NaN();
+    data1 := d1.GetData();
+
+    for i, v := range data1 {
+        if math.Abs(d1_ok[i] - v) > 0.001 {
+            t.Errorf("after xts.Diff, data error");
+            return;
+        }
+    }
+
+    d3_ok := [30]float64 {0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 222.3, -256.0, 97.1, -81.1, 67.2, 301.2, -145.1, 0, 0, 0, -8, -3, 1, -1, 1, 3, 8};
+    for i := 0; i < 3; i++ {
+        d3_ok[0 + i] = math.NaN();
+        d3_ok[10 + i] = math.NaN();
+        d3_ok[20 + i] = math.NaN();
+    }
+    data3 := d3.GetData();
+
+    for i, v := range data3 {
+        if math.Abs(d3_ok[i] - v) > 0.001 {
+            t.Errorf("after xts.Diff, data error");
+            return;
+        }
+    }
+}
 
 func newXtsFromCSV(filename string) *Xts {
     inp, err := os.Open(filename);
