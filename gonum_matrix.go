@@ -54,6 +54,17 @@ func (m *Matrix) getPtr() *[]float64 {
     return &(m.data);
 }
 
+func (m *Matrix) GetRowData(row int) []float64 {
+    if row >= m.GetRowNum() {
+        panic("GetRowData, row index large than matrix's row_num");
+    }
+    col_nums := m.GetColumeNum();
+    rdata := make([]float64, col_nums, col_nums);
+    for i := 0; i < col_nums; i++ {
+        rdata[i] = m.Get(row, i);
+    }
+    return rdata;
+}
 
 func (m *Matrix) GetColumeData(col int) []float64 {
     if col >= m.GetColumeNum() {

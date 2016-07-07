@@ -31,11 +31,32 @@ func (this Xts) Swap(i, j int) {
     m.SwapRow(i, j);
 }
 
-
 func NewXts(index []time.Time, m *Matrix) *Xts {
     xts := newXtsNoSort(index, m);
     sort.Sort(xts);
     return xts;
+}
+
+func NewXtsWithColumes(index []time.Time, cols ... []float64) *Xts {
+    data := make([]float64, 0, 0);
+    col_nums := len(cols);
+    if col_nums <= 0 {
+        panic("NewXts unvalid parameter.");
+    }
+    row_nums := len(cols[0]);
+    data = append(data, cols[0]...);
+
+    for i := 1; i < col_nums; i++ {
+        col := cols[i];
+        if row_nums != len(col) {
+            panic("NewXts unvalid parameter");
+        }
+
+        data = append(data, col...);
+    }
+
+    matrix := NewMatrix(row_nums, col_nums, data);
+    return NewXts(index, matrix);
 }
 
 func newXtsNoSort(index []time.Time, m *Matrix) *Xts {
@@ -77,6 +98,15 @@ func (this *Xts) SetNames(n ... string) {
         }
     }
 }
+
+func (this *Xts) GetIndex(row int) time.Time {
+    return this.index[row];
+}
+
+// func (this *Xts) GetRow(row int) (time.Time, []float64) {
+//     ts := this.index[row];
+//     rdata := this.matrix.GetRow(row);
+// }
 
 func (this *Xts) GetColumeData(col int) []float64 {
     return this.matrix.GetColumeData(col);

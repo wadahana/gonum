@@ -35,7 +35,7 @@ func Test_NewXts(t *testing.T) {
         strings.Compare(names[2], "Colume.3") != 0 {
         t.Errorf("xts default colume name test fail.");
     }
-    fmt.Printf("default names:\n%v\n", names);
+    t.Logf("default names:\n%v\n", names);
 
     xts.SetNames("First", "Second", "Third");
     names = xts.GetNames();
@@ -44,7 +44,18 @@ func Test_NewXts(t *testing.T) {
         strings.Compare(names[2], "Third") != 0 {
         t.Errorf("xts setname / getname test fail.");
     }
-    fmt.Printf("names:\n%v\n", names);
+    t.Logf("names:\n%v\n", names);
+
+    xts1 := NewXtsWithColumes(times, col1, col2);
+    t.Logf("\n%v[%d,%d]\n", xts1, xts1.GetRowNum(), xts1.GetColumeNum());
+
+    data1 := xts1.GetColumeData(0);
+    for i, v := range data1 {
+        if int(v) != i + 1 {
+            t.Errorf("NewXtsWithColumes not sort by time.");
+            return;
+        }
+    }
 }
 
 func Test_Xts_RBind(t *testing.T) {
