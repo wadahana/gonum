@@ -1,7 +1,7 @@
 package gonum
 
 import (
-    "fmt"
+//    "fmt"
 //    "time"
 //    "math"
     "testing"
@@ -30,13 +30,28 @@ func Test_NewMatrix(t *testing.T) {
         return;
     }
 
-    err = m2.Set(1, 1, float32(100.2));
+    err = m1.Set(2,2, 100.2);
     if err == nil {
-        v := m2.Get(1,1);
-        fmt.Printf("Value: %v\n", v);
+        v := m1.Get(2,2).(float64);
+        if v != 100.2 {
+            t.Errorf("Empty Matrix's Set/Get test fail");
+        }
     } else {
         t.Errorf("Matrix.Set test fail, Error; %v\n", err);
+        return;
     }
+
+    err = m2.Set(1, 1, float32(100.1));
+    if err == nil {
+        v := m2.Get(1,1).(float32);
+        if v != 100.1 {
+            t.Errorf("Matrix's Set/Get test fail");
+        }
+    } else {
+        t.Errorf("Matrix.Set test fail, Error; %v\n", err);
+        return;
+    }
+
 
     return;
 }
