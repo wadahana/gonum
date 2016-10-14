@@ -1,14 +1,46 @@
 package gonum
 
 import (
-//    "fmt"
+    "fmt"
 //    "time"
-    "math"
+//    "math"
     "testing"
 //    "reflect"
 )
 
+var data1 = [] float32 {
+    0.1, 0.2, 0.3, 0.4, 0.5,
+    1.1, 1.2, 1.3, 1.4, 1.5,
+    2.1, 2.2, 2.3, 2.4, 2.5,
+    3.1, 2.2, 3.3, 3.4, 3.5,
+};
 
+func Test_NewMatrix(t *testing.T) {
+    m0 := NewEmptyMatrix();
+    t.Logf("create empty matrix: \n%v\n", m0);
+
+    m1 := NewMatrix(4, 5, ElementUnknown);
+    t.Logf("create empty matrix with dim(4,5): \n%v\n", m1);
+
+    m2, err := NewMatrixWithData(4, 5, data1);
+    if err == nil {
+       t.Logf("create matrix with data1, dim(4,5): \n%v\n", m2);
+    } else {
+        t.Errorf("NewMatrixWithData fail, Error: %v", err);
+        return;
+    }
+
+    err = m2.Set(1, 1, float32(100.2));
+    if err == nil {
+        v := m2.Get(1,1);
+        fmt.Printf("Value: %v\n", v);
+    } else {
+        t.Errorf("Matrix.Set test fail, Error; %v\n", err);
+    }
+
+    return;
+}
+/*
 var dates = [10]string {
     "2015-10-01", //7
     "2014-01-01", //4
@@ -359,3 +391,5 @@ func Test_Math(t *testing.T) {
 
     t.Logf("\n%v[%d,%d]\n", dm, dm.GetRowNum(), dm.GetColumeNum());
 }
+
+*/
