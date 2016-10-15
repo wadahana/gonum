@@ -8,23 +8,23 @@ import (
 //    "reflect"
 )
 
-var data1 = [] float32 {
+var matrix_data = [] float64 {
     0.1, 0.2, 0.3, 0.4, 0.5,
     1.1, 1.2, 1.3, 1.4, 1.5,
     2.1, 2.2, 2.3, 2.4, 2.5,
     3.1, 2.2, 3.3, 3.4, 3.5,
 };
 
-func Test_NewMatrix(t *testing.T) {
+func Test_Matrix(t *testing.T) {
     m0 := NewEmptyMatrix();
     t.Logf("create empty matrix: \n%v\n", m0);
 
-    m1 := NewMatrix(4, 5, ElementUnknown);
-    t.Logf("create empty matrix with dim(4,5): \n%v\n", m1);
+    m1 := NewMatrix(5, 4, ElementUnknown);
+    t.Logf("create empty matrix with dim(5,4): \n%v\n", m1);
 
-    m2, err := NewMatrixWithData(4, 5, data1);
+    m2, err := NewMatrixWithData(5, 4, matrix_data);
     if err == nil {
-       t.Logf("create matrix with data1, dim(4,5): \n%v\n", m2);
+       t.Logf("create matrix with matrix_data, dim(5,4): \n%v\n", m2);
     } else {
         t.Errorf("NewMatrixWithData fail, Error: %v", err);
         return;
@@ -37,22 +37,41 @@ func Test_NewMatrix(t *testing.T) {
             t.Errorf("Empty Matrix's Set/Get test fail");
         }
     } else {
-        t.Errorf("Matrix.Set test fail, Error; %v\n", err);
+        t.Errorf("Empty Matrix.Set test fail, Error; %v\n", err);
         return;
     }
 
-    err = m2.Set(1, 1, float32(100.1));
+    err = m2.Set(1, 1, float64(100.1));
     if err == nil {
-        v := m2.Get(1,1).(float32);
+        v := m2.Get(1,1).(float64);
         if v != 100.1 {
             t.Errorf("Matrix's Set/Get test fail");
         }
     } else {
-        t.Errorf("Matrix.Set test fail, Error; %v\n", err);
+        t.Errorf("Matrix.Set test fail, Error: %v\n", err);
         return;
     }
 
+    m3, err := m1.CBind(m2);
+    if err != nil {
+        t.Errorf("CBind fail, Error: %v\n", err);
+        return ;
+    }
+    t.Logf("\n%v\n", m3);
 
+    m4, err := m1.RBind(m2);
+    if err != nil {
+        t.Errorf("RBind fail, Error: %v\n", err);
+        return ;
+    }
+    t.Logf("\n%v\n", m4);
+
+    col_data, err := m4.GetColumeData(2);
+    if err != nil {
+        t.Errorf("Matrix.GetColumeData fail, Error: %v\n", err);
+        return ;
+    }
+    t.Logf("\n%v \n", col_data);
     return;
 }
 /*

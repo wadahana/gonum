@@ -41,12 +41,8 @@ func NewMatrixWithData(rows, cols int, values interface{}) (*Matrix, error) {
     data, err := createDataSlice(element_type, element_nums);
     if err == nil {
         switch (element_type) {
-        case ElementFloat32:
-            copy(data.([]float32), values.([]float32));
         case ElementFloat64:
             copy(data.([]float64), values.([]float64));
-        case ElementComplex64:
-            copy(data.([]complex64), values.([]complex64));
         case ElementComplex128:
             copy(data.([]complex128), values.([]complex128));
         }
@@ -68,7 +64,7 @@ func (m *Matrix) String() string {
             s += "\n";
         }
     }
-    s += fmt.Sprintf("Dim: [%d x %d], Type: %v\n", m.row_num, m.col_num, m.element_type);
+    s += fmt.Sprintf("Dimension: [%d x %d], Type: %v\n", m.row_num, m.col_num, m.element_type);
 
     return s;
 }
@@ -143,18 +139,8 @@ func (m *Matrix) SwapRow(i, j int) error {
         return ErrorInvalidParameter;
     }
     element_type := m.GetElementType();
-    if element_type == ElementFloat32 {
-        s := m.data.([]float32);
-        for c := 0; c < m.col_num; c++ {
-            s[i + c * m.row_num], s[j + c * m.row_num] = s[j + c * m.row_num], s[i + c * m.row_num];
-        }
-    } else if element_type == ElementFloat64 {
+    if element_type == ElementFloat64 {
         s := m.data.([]float64);
-        for c := 0; c < m.col_num; c++ {
-            s[i + c * m.row_num], s[j + c * m.row_num] = s[j + c * m.row_num], s[i + c * m.row_num];
-        }
-    } else if element_type == ElementComplex64 {
-        s := m.data.([]complex64);
         for c := 0; c < m.col_num; c++ {
             s[i + c * m.row_num], s[j + c * m.row_num] = s[j + c * m.row_num], s[i + c * m.row_num];
         }
@@ -167,14 +153,61 @@ func (m *Matrix) SwapRow(i, j int) error {
     return nil;
 }
 
-func (m *Matrix) GetFloat32() ([]float32, error) {
-    if m.GetElementType() == ElementUnknown || m.data == nil {
+func (m *Matrix) RBind(other *Matrix) (*Matrix, error) {
+    if m.GetColumeNum() != other.GetColumeNum() {
+        return nil, ErrorDimUnmatched;
+    } else if m.GetElementType() != other.GetElementType() {
+        return nil, ErrorElementTypeUnmatched;
+    } else if m.GetElementType() == ElementUnknown || m.data == nil {
+        return nil, ErrorElementTypeNotSet;
+    }
+
+    col_num := m.GetColumeNum();
+    data := reflect.MakeSlice(reflect.TypeOf(m.data), 0, 0);
+    for i := 0; i < col_num; i++ {
+        d1, err := m.GetColumeData(i);
+        if err != nil {
+            return nil, err;
+        }
+        d2, err := other.GetColumeData(i);
+        if err != nil {
+            return nil, err;
+        }
+        data = reflect.AppendSlice(data, reflect.ValueOf(d1));
+        data = reflect.AppendSlice(data, reflect.ValueOf(d2));
+    }
+
+    matrix, err := NewMatrixWithData(m.GetRowNum() + other.GetRowNum(), col_num, data.Interface());
+    return matrix, err;
+}
+
+func (m *Matrix) CBind(other *Matrix) (*Matrix, error) {
+    if m.GetRowNum() != other.GetRowNum() {
+        return nil, ErrorDimUnmatched;
+    } else if m.GetElementType() != other.GetElementType() { // 2 matrix have diff element type
+        return nil, ErrorElementTypeUnmatched;
+    } else if m.GetElementType() == ElementUnknown || m.data == nil {
+        return nil, ErrorElementTypeNotSet;
+    }
+    data := reflect.MakeSlice(reflect.TypeOf(m.data), 0, 0);
+    data = reflect.AppendSlice(data, reflect.ValueOf(m.data));
+    data = reflect.AppendSlice(data, reflect.ValueOf(other.data));
+  //  fmt.Printf("%d\n", data);
+    matrix, err := NewMatrixWithData(m.GetRowNum(), m.GetColumeNum() + other.GetColumeNum(), data.Interface());
+    return matrix, err;
+}
+
+func (m *Matrix) GetColumeData(col int) (interface{}, error) {
+    if col >= m.GetColumeNum() {
+        return nil, ErrorInvalidParameter;
+    }
+    if m.data == nil || m.GetElementType() == ElementUnknown {
         return nil, ErrorMatrixIsEmpty;
     }
-    if m.GetElementType() == ElementFloat32 {
-        return nil, ErrorElementTypeUnmatched;
-    }
-    return m.data.([]float32), nil;
+    v := reflect.ValueOf(m.data);
+    i := col * m.row_num;
+    result := v.Slice(i, i + m.row_num);
+    return result.Interface(), nil;
 }
 
 func (m *Matrix) GetFloat64() ([]float64, error) {
@@ -185,16 +218,6 @@ func (m *Matrix) GetFloat64() ([]float64, error) {
         return nil, ErrorElementTypeUnmatched;
     }
     return m.data.([]float64), nil;
-}
-
-func (m *Matrix) GetComplex64() ([]complex64, error) {
-    if m.GetElementType() == ElementUnknown || m.data == nil {
-        return nil, ErrorMatrixIsEmpty;
-    }
-    if m.GetElementType() == ElementComplex64 {
-        return nil, ErrorElementTypeUnmatched;
-    }
-    return m.data.([]complex64), nil;
 }
 
 func (m *Matrix) GetComplex128() ([]complex128, error) {
@@ -213,14 +236,8 @@ func createDataSlice(element_type ElementType, element_nums int) (interface{}, e
     var data interface{} = nil;
     var err error = nil
     if element_nums > 0 {
-        if element_type == ElementFloat32 {
-            ss := make([]float32, element_nums, element_nums);
-            data = interface{}(ss);
-        } else if element_type == ElementFloat64 {
+        if element_type == ElementFloat64 {
             ss := make([]float64, element_nums, element_nums);
-            data = interface{}(ss);
-        } else if element_type == ElementComplex64 {
-            ss := make([]complex64, element_nums, element_nums);
             data = interface{}(ss);
         } else if element_type == ElementComplex128 {
             ss := make([]complex128, element_nums, element_nums);
