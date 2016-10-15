@@ -29,10 +29,11 @@ var xts0_time = [] time.Time {
 }
 
 var xts1_data = [] float64 {
-    10.1, 10.2, 10.3, 10.4, 10.5,
-    11.1, 11.2, 11.3, 11.4, 11.5,
-    12.1, 12.2, 12.3, 12.4, 12.5,
-    13.1, 12.2, 13.3, 13.4, 13.5,
+    10.1, 10.2, 10.3, 10.4, 10.5, 10.6,
+    11.1, 11.2, 11.3, 11.4, 11.5, 11.6,
+    12.1, 12.2, 12.3, 12.4, 12.5, 12.6,
+    13.1, 13.2, 13.3, 13.4, 13.5, 13.6,
+    14.1, 14.2, 14.3, 14.4, 14.5, 14.6,
 };
 
 var xts1_time = [] time.Time {
@@ -41,8 +42,22 @@ var xts1_time = [] time.Time {
     time.Date(2001, 04, 01, 0, 0, 0, 0, time.Local),
     time.Date(2001, 01, 02, 0, 0, 0, 0, time.Local),
     time.Date(2001, 02, 01, 0, 0, 0, 0, time.Local),
+    time.Date(2001, 07, 01, 0, 0, 0, 0, time.Local),
 }
 
+var xts2_data = [] float64 {
+    20.1, 20.2, 20.3, 20.4,
+    21.1, 21.2, 21.3, 21.4,
+    22.1, 22.2, 22.3, 22.4,
+    23.1, 22.2, 23.3, 23.4,
+};
+
+var xts2_time = [] time.Time {
+    time.Date(2001, 05, 02, 0, 0, 0, 0, time.Local),
+    time.Date(2001, 03, 02, 0, 0, 0, 0, time.Local),
+    time.Date(2001, 04, 02, 0, 0, 0, 0, time.Local),
+    time.Date(2001, 01, 02, 0, 0, 0, 0, time.Local),
+}
 
 func Test_Xts(t *testing.T) {
     var m0 *Matrix = nil;
@@ -74,7 +89,7 @@ func Test_Xts(t *testing.T) {
     var m1 *Matrix = nil;
     var x1 *Xts = nil;
 
-    m1, err = NewMatrixWithData(5, 4, xts1_data);
+    m1, err = NewMatrixWithData(6, 5, xts1_data);
     if err == nil {
         x1, err = NewXts(xts1_time, m1);
     }
@@ -82,15 +97,39 @@ func Test_Xts(t *testing.T) {
         t.Errorf("New Xts Test fail, Error: %v\n", err);
         return ;
     }
-    x1.SetName("Col_A", "Col_B", "Col_C", "Col_D");
+    x1.SetName("Col_A", "Col_B", "Col_C", "Col_D", "Col_D");
     t.Logf("x1:\n%v\n", x1);
 
-    x2, err := x0.CBind(x1)
+
+    var m2 *Matrix = nil;
+    var x2 *Xts = nil;
+
+    m2, err = NewMatrixWithData(4, 4, xts2_data);
+    if err == nil {
+        x2, err = NewXts(xts2_time, m2);
+    }
+    if err != nil {
+        t.Errorf("New Xts Test fail, Error: %v\n", err);
+        return ;
+    }
+    x2.SetName("Col_I", "Col_II", "Col_III", "Col_IV");
+    t.Logf("x2:\n%v\n", x2);
+
+    cbx, err := x0.CBind(x1)
     if err != nil {
         t.Errorf("Xts.CBind Test fail, Error: %v\n", err);
         return ;
     }
-    t.Logf("x2:\n%v\n", x2);
+    t.Logf("x0 colume bind with x1: \n%v\n", cbx);
+
+    rbx, err := x0.RBind(x2)
+    if err != nil {
+        t.Errorf("Xts.RBind Test fail, Error: %v\n", err);
+        return ;
+    }
+    t.Logf("x0 row bind with x2: \n%v\n", rbx);
+
+
 }
 /*
 func Test_NewXts(t *testing.T) {

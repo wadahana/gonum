@@ -157,10 +157,91 @@ func (this *Xts) GetColumes(cols []int) *Xts {
 */
 
 
-/*
-func (this *Xts) RBind(other *Xts) *Xts {
 
+func (this *Xts) RBind(other *Xts) (*Xts, error) {
+    element_type := this.GetElementType();
+    if element_type != other.GetElementType() { // 2 xts have diff element type
+        return nil, ErrorElementTypeUnmatched;
+    } else if element_type == ElementUnknown {
+        return nil, ErrorElementTypeNotSet;
+    } else if this.GetColumeNum() != other.GetColumeNum() {
+        return nil, ErrorDimUnmatched;
+    }
+    total_col_num := this.GetColumeNum();
+    col_list := make([]reflect.Value, total_col_num, total_col_num);
+    for i := 0; i < total_col_num; i++ {
+        col_list[i] = reflect.MakeSlice(reflect.TypeOf(this.matrix.data), 0, 0);
+    }
+
+
+    time := make([]time.Time, 0);
+    size1 := len(this.index);
+    size2 := len(other.index);
+    var j, k int = 0, 0;
+    for j < size1 && k < size2 {
+        if this.index[j].Equal(other.index[k]) {
+            return nil, ErrorIndexConflict;
+        } else if this.index[j].Before(other.index[k]) {
+            for c := 0; c < total_col_num; c++ {
+                v := this.Get(j, c);
+                col_list[c] = reflect.Append(col_list[c], reflect.ValueOf(v));
+//                cols[c] = append(cols[c], v);
+            }
+            time = append(time, this.index[j]);
+            j += 1
+        } else {
+            for c := 0; c < total_col_num; c++ {
+                v := other.Get(k, c);
+                col_list[c] = reflect.Append(col_list[c], reflect.ValueOf(v));
+//                cols[c] = append(cols[c], v);
+            }
+            time = append(time, other.index[k]);
+            k += 1;
+        }
+    }
+    if j < size1 {
+        for i := 0; i < total_col_num; i++ {
+            col_data, err := this.matrix.GetColumeData(i);
+            if err != nil {
+                return nil, err;
+            }
+            v_col_data := reflect.ValueOf(col_data);
+            col_list[i] = reflect.AppendSlice(col_list[i], v_col_data.Slice(j, v_col_data.Len()));
+//            cols[i] = append(cols[i], col[j:]...);
+        }
+        time = append(time, this.index[j:]...);
+    }
+    if k < size2 {
+        for i := 0; i < total_col_num; i++ {
+            col_data, err := other.matrix.GetColumeData(i);
+            if err != nil {
+                return nil, err;
+            }
+            v_col_data := reflect.ValueOf(col_data);
+            col_list[i] = reflect.AppendSlice(col_list[i], v_col_data.Slice(k, v_col_data.Len()));
+//            cols[i] = append(cols[i], col[k:]...);
+        }
+        time = append(time, other.index[k:]...);
+    }
+
+    data := col_list[0];
+    for i := 1; i < total_col_num; i++ {
+        data = reflect.AppendSlice(data, col_list[i]);
+//        data = append(data, cols[i]...);
+    }
+
+    var m * Matrix = nil;
+    var x * Xts = nil;
+    var err error = nil;
+
+    m, err = NewMatrixWithData(len(time), total_col_num, data.Interface());
+    if err == nil {
+        x, err = NewXts(time, m);
+    }
+    return x, err;
 }
+
+/*
 func (this *Xts) RBind(other *Xts) *Xts {
     if this.GetColumeNum() != other.GetColumeNum() {
         panic("two xts dont have same colume num.");
@@ -342,89 +423,3 @@ func (this *Xts) CBind(other* Xts) (*Xts, error) {
 
     return x, err;
 }
-
-/*
-func (this *Xts) CBind(other* Xts) *Xts {
-    col1_num := this.GetColumeNum();
-    col2_num := other.GetColumeNum();
-    col_num := col1_num + col2_num;
-    cols := make([][]float64, col_num, col_num);
-    for i := 0; i < col_num; i++ {
-        cols[i] = make([]float64, 0);
-    }
-
-    time := make([]time.Time, 0);
-    size1 := len(this.index);
-    size2 := len(other.index);
-    v_nan := math.NaN();
-    var j, k int = 0, 0;
-    for j < size1 && k < size2 {
-        if this.index[j].Equal(other.index[k]) {
-            for c := 0; c < col1_num; c++ {
-                v := this.matrix.Get(j, c);
-                cols[c] = append(cols[c], v);
-            }
-            for c := 0; c < col2_num; c++ {
-                v := other.matrix.Get(k, c);
-                cols[col1_num + c] = append(cols[col1_num + c], v);
-            }
-            time = append(time, this.index[j]);
-            j += 1;
-            k += 1;
-
-        } else if this.index[j].Before(other.index[k]) {
-            for c := 0; c < col1_num; c++ {
-                v := this.matrix.Get(j, c);
-                cols[c] = append(cols[c], v);
-            }
-            for c := 0; c < col2_num; c++ {
-                cols[col1_num + c] = append(cols[col1_num + c], v_nan);
-            }
-            time = append(time, this.index[j]);
-            j += 1;
-        } else {
-            for c := 0; c < col1_num; c++ {
-                cols[c] = append(cols[c], v_nan);
-            }
-            for c := 0; c < col2_num; c++ {
-                v := other.matrix.Get(k, c);
-                cols[col1_num + c] = append(cols[col1_num + c], v);
-            }
-            time = append(time, other.index[k]);
-            k += 1;
-        }
-    }
-    if j < size1 {
-        l_nan := createNaNSlice(size1 - j);
-        for i := 0; i < col1_num; i++ {
-            col := this.matrix.GetColumeData(i);
-            cols[i] = append(cols[i], col[j:]...);
-        }
-        for i := 0; i < col2_num; i++ {
-            cols[col1_num + i] = append(cols[col1_num + i], l_nan...);
-        }
-        time = append(time, this.index[j:]...);
-    }
-    if k < size2 {
-        l_nan := createNaNSlice(size2 - k);
-        for i := 0; i < col1_num; i++ {
-            cols[i] = append(cols[i], l_nan...);
-        }
-        for i := 0; i < col2_num; i++ {
-            col := other.matrix.GetColumeData(i);
-            cols[col1_num + i] = append(cols[col1_num + i], col[k:]...);
-        }
-        time = append(time, other.index[k:]...);
-    }
-
-    data := cols[0];
-    for i := 1; i < col_num; i++ {
-        data = append(data, cols[i]...);
-    }
-
-    m := NewMatrix(len(time), col_num, data);
-    xts := newXtsNoSort(time, m);
-    return xts;
-}
-
-*/
