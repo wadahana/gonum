@@ -1,16 +1,17 @@
 #!/bin/bash
 
-OPENBLAS_DIR=$PWD/blas
-SOURCE_DIR=$OPENBLAS_DIR/OpenBLAS
-TARGET_DIR=$OPENBLAS_DIR/target
-OS_NAME=`uname`
-pushd $OPENBLAS_DIR
+script_path=$(cd "$(dirname "$0")"; pwd)
+third_party_path="${script_path}/../third_party"
+target_path="${third_party_path}/target"
+openblas_path="${third_party_path}/OpenBLAS"
 
-mkdir -p $TARGET_DIR
+echo -e "${third_party_path}"
 
-pushd OpenBLAS
+mkdir -p $target_path
 
-make OSNAME=$OS_NAME BINARY=64
-make install PREFIX=$TARGET_DIR
+os_name=`uname`
 
+pushd $openblas_path
+make OSNAME=$os_name BINARY=64
+make install PREFIX=$target_path
 popd
