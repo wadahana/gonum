@@ -1,17 +1,137 @@
 package gonum
 
+
 import (
-    "fmt"
+//    "fmt"
     "time"
-    "os"
-    "io"
-    "strings"
-    "strconv"
-    "encoding/csv"
-    "testing"
-    "math"
+    // "os"
+    // "io"
+    // "strings"
+    // "strconv"
+    // "encoding/csv"
+     "testing"
+    // "math"
 )
 
+var xts0_data = [] float64 {
+    100.1, 100.2, 100.3, 100.4, 100.5,
+    101.1, 101.2, 101.3, 101.4, 101.5,
+    102.1, 102.2, 102.3, 102.4, 102.5,
+    103.1, 102.2, 103.3, 103.4, 103.5,
+};
+
+var xts0_time = [] time.Time {
+    time.Date(2001, 05, 01, 0, 0, 0, 0, time.Local),
+    time.Date(2001, 03, 01, 0, 0, 0, 0, time.Local),
+    time.Date(2001, 04, 01, 0, 0, 0, 0, time.Local),
+    time.Date(2001, 01, 01, 0, 0, 0, 0, time.Local),
+    time.Date(2001, 02, 01, 0, 0, 0, 0, time.Local),
+}
+
+var xts1_data = [] float64 {
+    10.1, 10.2, 10.3, 10.4, 10.5, 10.6,
+    11.1, 11.2, 11.3, 11.4, 11.5, 11.6,
+    12.1, 12.2, 12.3, 12.4, 12.5, 12.6,
+    13.1, 13.2, 13.3, 13.4, 13.5, 13.6,
+    14.1, 14.2, 14.3, 14.4, 14.5, 14.6,
+};
+
+var xts1_time = [] time.Time {
+    time.Date(2001, 05, 02, 0, 0, 0, 0, time.Local),
+    time.Date(2001, 03, 01, 0, 0, 0, 0, time.Local),
+    time.Date(2001, 04, 01, 0, 0, 0, 0, time.Local),
+    time.Date(2001, 01, 02, 0, 0, 0, 0, time.Local),
+    time.Date(2001, 02, 01, 0, 0, 0, 0, time.Local),
+    time.Date(2001, 07, 01, 0, 0, 0, 0, time.Local),
+}
+
+var xts2_data = [] float64 {
+    20.1, 20.2, 20.3, 20.4,
+    21.1, 21.2, 21.3, 21.4,
+    22.1, 22.2, 22.3, 22.4,
+    23.1, 22.2, 23.3, 23.4,
+};
+
+var xts2_time = [] time.Time {
+    time.Date(2001, 05, 02, 0, 0, 0, 0, time.Local),
+    time.Date(2001, 03, 02, 0, 0, 0, 0, time.Local),
+    time.Date(2001, 04, 02, 0, 0, 0, 0, time.Local),
+    time.Date(2001, 01, 02, 0, 0, 0, 0, time.Local),
+}
+
+func Test_Xts(t *testing.T) {
+    var m0 *Matrix = nil;
+    var x0 *Xts = nil;
+    var err error = nil;
+
+    m0, err = NewMatrixWithData(5, 4, xts0_data);
+    if err == nil {
+        x0, err = NewXts(xts0_time, m0);
+    }
+    if err != nil {
+        t.Errorf("New Xts Test fail, Error: %v\n", err);
+        return ;
+    }
+    x0.SetName("Col1", "Col2", "Col3", "Col4");
+    t.Logf("x0:\n%v\n", x0);
+
+    err = x0.Set(1,1, 1000.1);
+    if err != nil {
+        t.Errorf("Xts.Set Testfail, Error: %v\n", err);
+        return;
+    }
+    v := x0.Get(1,1);
+    if v != 1000.1 {
+        t.Errorf("Xts.Set/Get Test fail\n");
+        return;
+    }
+
+    var m1 *Matrix = nil;
+    var x1 *Xts = nil;
+
+    m1, err = NewMatrixWithData(6, 5, xts1_data);
+    if err == nil {
+        x1, err = NewXts(xts1_time, m1);
+    }
+    if err != nil {
+        t.Errorf("New Xts Test fail, Error: %v\n", err);
+        return ;
+    }
+    x1.SetName("Col_A", "Col_B", "Col_C", "Col_D", "Col_D");
+    t.Logf("x1:\n%v\n", x1);
+
+
+    var m2 *Matrix = nil;
+    var x2 *Xts = nil;
+
+    m2, err = NewMatrixWithData(4, 4, xts2_data);
+    if err == nil {
+        x2, err = NewXts(xts2_time, m2);
+    }
+    if err != nil {
+        t.Errorf("New Xts Test fail, Error: %v\n", err);
+        return ;
+    }
+    x2.SetName("Col_I", "Col_II", "Col_III", "Col_IV");
+    t.Logf("x2:\n%v\n", x2);
+
+    cbx, err := x0.CBind(x1)
+    if err != nil {
+        t.Errorf("Xts.CBind Test fail, Error: %v\n", err);
+        return ;
+    }
+    t.Logf("x0 colume bind with x1: \n%v\n", cbx);
+
+    rbx, err := x0.RBind(x2)
+    if err != nil {
+        t.Errorf("Xts.RBind Test fail, Error: %v\n", err);
+        return ;
+    }
+    t.Logf("x0 row bind with x2: \n%v\n", rbx);
+
+
+}
+/*
 func Test_NewXts(t *testing.T) {
     m := testcase_NewMatrix();
     times := make([]time.Time, 0);
@@ -153,10 +273,11 @@ func Test_Xts_CBind(t *testing.T) {
     t.Logf("\n%v[%d,%d]\n", xts4, xts4.GetRowNum(), xts4.GetColumeNum());
     t.Logf("\n%v[%d,%d]\n", xts5, xts5.GetRowNum(), xts5.GetColumeNum());
 }
-
+*/
 /*
     m<-c(1,2,3,4,5,6,7,8,9,10,112.1,933.1,403.5,334.4,677.1,500.6,253.3,744.3,801.8,108.2,10,8,3,2,5,4,1,6,7,9)
 */
+    /*
 func Test_Xts_Math(t *testing.T) {
     m := testcase_NewMatrix();
     times := make([]time.Time, 0);
@@ -256,3 +377,4 @@ func newXtsFromCSV(filename string) *Xts {
     xts.SetNames(names...);
     return xts;
 }
+*/

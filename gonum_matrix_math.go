@@ -1,5 +1,6 @@
-package gonum
 
+package gonum
+/*
 import (
     //"fmt"
     "math"
@@ -91,3 +92,5 @@ func (m *Matrix) Pow(exp float64) *Matrix {
     lm := NewMatrix(m.GetRowNum(), m.GetColumeNum(), new_data);
     return lm;
 }
+
+*/
