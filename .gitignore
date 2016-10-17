@@ -3,7 +3,7 @@
 tags
 *.log
 *.o
-blas/example/bin
-blas/example/objs
-blas/target
+third_party/example/bin
+third_party/example/objs
+third_party/target
 

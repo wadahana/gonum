@@ -3,6 +3,8 @@
 #include "stdlib.h"
 #include "math.h"
 
+extern void test_level1();
+
 #define max(a, b) (a > b ? a : b)
 /* * * * * * * * * *
  * A:
@@ -29,6 +31,10 @@ double matrix_C[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 
 int main(const int argc, const char* argv[])
 {
+    test_level1();
+}
+/*
+{
     int M = 4; // matrix A's row num
     int N = 5; // matrix B's col num
     int K = 2; // matrix A's col num
@@ -45,6 +51,7 @@ int main(const int argc, const char* argv[])
         fprintf(stdout, "\n");
     }
 }
+*/
 /*
 
 m1<-c(1.0, 2.0, 3.0, 4.0, 11.0, 12.0, 13.0, 14.0)
