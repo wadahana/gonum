@@ -15,6 +15,31 @@ var matrix_data = [] float64 {
     3.1, 2.2, 3.3, 3.4, 3.5,
 };
 
+var fmatrix_data_A = []float64 {
+    1.0,  2.0,
+    3.0,  4.0,
+    11.0, 12.0,
+    13.0, 14.0,
+};
+
+var fmatrix_data_B = []float64 {
+    11.0, 12.0, 21.0, 22.0, 31.0,
+    32.0, 41.0, 42.0, 51.0, 52.0,
+};
+
+var cmatrix_data_A = []complex128 {
+    1.0 + 1.0i, 2.0 + 1.0i,
+    3.0 + 1.0i, 4.0 + 1.0i,
+    5.0 + 1.0i, 6.0 + 1.0i,
+    7.0 + 1.0i, 8.0 + 1.0i,
+};
+
+var cmatrix_data_B = []complex128 {
+    10.0+10.0i, 20.0+10.0i, 30.0+10.0i, 40.0+10.0i, 50.0+10.0i,
+    60.0+10.0i, 70.0+10.0i, 80.0+10.0i, 90.0+10.0i, 100.0+10.0i,
+};
+
+
 func Test_Matrix(t *testing.T) {
     m0 := NewEmptyMatrix();
     t.Logf("create empty matrix: \n%v\n", m0);
@@ -72,6 +97,77 @@ func Test_Matrix(t *testing.T) {
         return ;
     }
     t.Logf("\n%v \n", col_data);
+
+
+    m1, err = NewMatrixWithData(4, 2, fmatrix_data_A);
+    if err == nil {
+        m2, err = NewMatrixWithData(2, 5, fmatrix_data_B);
+    }
+    if err == nil {
+        m3, err = m1.Product(1.0, m2);
+        if err != nil {
+            t.Errorf("Matrix.Profuct fail, Error: %v\n", err);
+            return ;
+        }
+        t.Logf("\n%v\n", m3);
+
+        m3, err = m1.Multiply(2.0);
+        if err != nil {
+            t.Errorf("Matrix.Multiply fail, Error: %v\n", err);
+            return ;
+        }
+        t.Logf("\n%v\n", m3);
+
+        m3, err = m1.Add(2000.0);
+        if err != nil {
+            t.Errorf("Matrix.Add fail, Error: %v\n", err);
+            return ;
+        }
+        t.Logf("\n%v\n", m3);
+
+        m4, err = m1.Add(m3);
+        if err != nil {
+            t.Errorf("Matrix.Add fail, Error: %v\n", err);
+            return ;
+        }
+        t.Logf("\n%v\n", m4);
+    }
+
+    m1, err = NewMatrixWithData(4, 2, cmatrix_data_A);
+    if err == nil {
+        m2, err = NewMatrixWithData(2, 5, cmatrix_data_B);
+    }
+    if err == nil {
+        m3, err = m1.Product(1.0i, m2);
+        if err != nil {
+            t.Errorf("Matrix.Profuct fail, Error: %v\n", err);
+            return ;
+        }
+        t.Logf("\n%v\n", m3);
+
+        m3, err = m1.Multiply(2.0i);
+        if err != nil {
+            t.Errorf("Matrix.Multiply fail, Error: %v\n", err);
+            return ;
+        }
+        t.Logf("\n%v\n", m3);
+
+        m3, err = m1.Add(2000.0i);
+        if err != nil {
+            t.Errorf("Matrix.Add fail, Error: %v\n", err);
+            return ;
+        }
+        t.Logf("\n%v\n", m3);
+
+        m4, err = m1.Add(m3);
+        if err != nil {
+            t.Errorf("Matrix.Add fail, Error: %v\n", err);
+            return ;
+        }
+        t.Logf("\n%v\n", m4);
+    }
+
+
     return;
 }
 /*

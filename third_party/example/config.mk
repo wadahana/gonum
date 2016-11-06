@@ -1,8 +1,7 @@
 
 
 
-EXEC =
-
+EXEC                                            =
 CC                                              = $(CROSS_PREFIX)gcc
 ifeq ($(PLATFORM), ios-arm)
 AR                                              = ar
@@ -13,4 +12,5 @@ LD                                              = $(CROSS_PREFIX)gcc
 RANLIB                                          = $(CROSS_PREFIX)ranlib
 STRIP                                           = $(CROSS_PREFIX)strip
 CFLAGS                                          = -I../target/include
-EXTRA_OBJS                                      = ../target/lib/libopenblas.a
+LDFLAGS                                         = -lstdc++
+EXTRA_OBJS                                      = ../target/lib/libopenblas.a ../target/lib/libalg.a

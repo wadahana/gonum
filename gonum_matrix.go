@@ -5,6 +5,42 @@ import (
     "reflect"
 )
 
+/*
+#cgo CFLAGS: -Wall -Wno-unused-variable -Wno-unused-function -I"./third_party/target/include"
+#cgo LDFLAGS: -L./third_party/target/lib -lopenblas
+
+
+#include <complex.h>
+#include <cblas.h>
+
+#define max(a, b) (a > b ? a : b)
+
+void cgo_cblas_dgemm(double* m1, double *m2, double *m3, int m1_row, int m1_col, int m2_col, double alpha, double beta) {
+
+    int lda = max(1, m1_row);
+    int ldb = max(1, m1_col);
+    int ldc = max(1, m1_row);
+
+    cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
+        m1_row, m2_col, m1_col, alpha, m1, lda, m2, ldb, beta, m3, ldc);
+    return;
+}
+
+void cgo_cblas_zgemm(double* m1, double *m2, double *m3, int m1_row, int m1_col, int m2_col, double complex alpha, double complex beta) {
+
+    int lda = max(1, m1_row);
+    int ldb = max(1, m1_col);
+    int ldc = max(1, m1_row);
+
+    cblas_zgemm(CblasColMajor, CblasNoTrans, CblasNoTrans,
+            m1_row, m2_col, m1_col, (double *)&alpha, m1, lda, m2, ldb, (double *)&beta, m3, ldc);
+    return;
+}
+
+*/
+import "C"
+import "unsafe"
+
 type Matrix struct {
     element_type ElementType;
     row_num int;
@@ -48,7 +84,6 @@ func NewMatrixWithData(rows, cols int, values interface{}) (*Matrix, error) {
         }
         m = &Matrix{row_num : rows, col_num : cols, element_type : element_type, data : data};
     }
-
     return m, err;
 }
 
@@ -65,8 +100,12 @@ func (m *Matrix) String() string {
         }
     }
     s += fmt.Sprintf("Dimension: [%d x %d], Type: %v\n", m.row_num, m.col_num, m.element_type);
-
     return s;
+}
+
+func (m *Matrix) Copy() *Matrix {
+    new_matrix, _ := NewMatrixWithData(m.GetRowNum(), m.GetColumeNum(), m.data);
+    return new_matrix;
 }
 
 func (m *Matrix) GetRowNum() int {
@@ -152,6 +191,213 @@ func (m *Matrix) SwapRow(i, j int) error {
     }
     return nil;
 }
+//  cgo_cblas_dgemm(double* m1, double *m2, double *m3, int m1_row, int m1_col, int m2_col, double alpha, double beta)
+func (m1 *Matrix) Product(alpha interface{}, m2 *Matrix) (*Matrix, error) {
+
+    if m1.GetColumeNum() != m2.GetRowNum() {
+        return nil, ErrorDimUnmatched;
+    }
+
+    var err error = nil;
+    var new_matrix *Matrix = nil;
+    if m1.GetElementType() == ElementFloat64 {
+        if m2.GetElementType() != ElementFloat64 {
+            return nil, ErrorElementTypeUnmatched;
+        }
+        var f_alpha float64 = 1.0;
+        if alpha != nil {
+            if elementTypeFromInterface(alpha) != ElementFloat64 {
+                return nil, ErrorElementTypeUnmatched;
+            }
+            f_alpha = alpha.(float64);
+        }
+        var data1 []float64 = nil;
+        var data2 []float64 = nil;
+        total := m1.GetRowNum() * m2.GetColumeNum();
+
+        data1, err = m1.GetFloat64();
+        if err == nil {
+            data2, err = m2.GetFloat64();
+        }
+        if err == nil {
+            data3 := make([]float64, total, total);
+
+            C.cgo_cblas_dgemm((*C.double)(unsafe.Pointer(&data1[0])), (*C.double)(unsafe.Pointer(&data2[0])), (*C.double)(unsafe.Pointer(&data3[0])),
+                            (C.int)(m1.GetRowNum()), (C.int)(m1.GetColumeNum()), (C.int)(m2.GetColumeNum()), C.double(f_alpha), C.double(0.0));
+
+            new_matrix, err = NewMatrixWithData(m1.GetRowNum(), m2.GetColumeNum(), data3);
+        }
+
+    } else if m1.GetElementType() == ElementComplex128 {
+
+       if m2.GetElementType() != ElementComplex128 {
+            return nil, ErrorElementTypeUnmatched;
+        }
+        var c_alpha complex128 = 1.0;
+        var c_beta complex128 = 0.0;
+        if alpha != nil {
+            if elementTypeFromInterface(alpha) != ElementComplex128 {
+                return nil, ErrorElementTypeUnmatched;
+            }
+            c_alpha = alpha.(complex128);
+        }
+        var data1 []complex128 = nil;
+        var data2 []complex128 = nil;
+        total := m1.GetRowNum() * m2.GetColumeNum();
+
+        data1, err = m1.GetComplex128();
+        if err == nil {
+            data2, err = m2.GetComplex128();
+        }
+        if err == nil {
+            data3 := make([]complex128, total, total);
+
+            C.cgo_cblas_zgemm((*C.double)(unsafe.Pointer(&data1[0])), (*C.double)(unsafe.Pointer(&data2[0])), (*C.double)(unsafe.Pointer(&data3[0])),
+                            (C.int)(m1.GetRowNum()), (C.int)(m1.GetColumeNum()), (C.int)(m2.GetColumeNum()), (C.complexdouble)(c_alpha), (C.complexdouble)(c_beta));
+
+            new_matrix, err = NewMatrixWithData(m1.GetRowNum(), m2.GetColumeNum(), data3);
+        }
+    }
+    return new_matrix, err;
+}
+
+func (m *Matrix) Multiply(v interface{}) (*Matrix, error) {
+    if elementTypeFromInterface(v) != m.GetElementType() {
+        return nil, ErrorElementTypeUnmatched;
+    }
+    var err error = nil;
+    var new_matrix *Matrix = nil;
+    var total_nums int = m.GetElementNum();
+    if m.GetElementType() == ElementFloat64 {
+        var src []float64;
+        src, err = m.GetFloat64();
+        if err == nil {
+            dst := make([]float64, total_nums, total_nums);
+            vv := v.(float64);
+            for i := 0; i < total_nums; i++ {
+                dst[i] = src[i] * vv;
+            }
+            new_matrix, err = NewMatrixWithData(m.GetRowNum(), m.GetColumeNum(), dst);
+        }
+    } else if m.GetElementType() == ElementComplex128 {
+        var src []complex128;
+        src, err = m.GetComplex128();
+        if err == nil {
+            dst := make([]complex128, total_nums, total_nums);
+            vv := v.(complex128);
+            for i := 0; i < total_nums; i++ {
+                dst[i] = src[i] * vv;
+            }
+            new_matrix, err = NewMatrixWithData(m.GetRowNum(), m.GetColumeNum(), dst);
+        }
+    }
+
+    return new_matrix, err;
+}
+
+func (m *Matrix) Add(v interface{}) (*Matrix, error) {
+    t := reflect.TypeOf(v);
+    if t.Kind() == reflect.Ptr && t.Elem().Name() == "Matrix" {
+        vv := v.(*Matrix);
+        if vv.GetRowNum() != m.GetRowNum() || vv.GetColumeNum() != m.GetColumeNum() {
+            return nil, ErrorDimUnmatched;
+        }
+
+        var err error = nil;
+        var new_matrix *Matrix = nil;
+        var total_nums int = m.GetElementNum();
+
+        if vv.GetElementType() == ElementFloat64 && m.GetElementType() == ElementFloat64 {
+
+            var data1 []float64 = nil;
+            var data2 []float64 = nil;
+
+            data1, err = m.GetFloat64();
+            if err == nil {
+                data2, err = vv.GetFloat64();
+            }
+            if err == nil {
+                data3 := make([]float64, total_nums, total_nums);
+                for i := 0; i < total_nums; i++ {
+                    data3[i] = data1[i] + data2[i];
+                }
+                new_matrix, err = NewMatrixWithData(m.GetRowNum(), m.GetColumeNum(), data3);
+            }
+
+        } else if vv.GetElementType() == ElementComplex128 && m.GetElementType() == ElementComplex128 {
+
+            var data1 []complex128 = nil;
+            var data2 []complex128 = nil;
+
+            data1, err = m.GetComplex128();
+            if err == nil {
+                data2, err = vv.GetComplex128();
+            }
+            if err == nil {
+                data3 := make([]complex128, total_nums, total_nums);
+                for i := 0; i < total_nums; i++ {
+                    data3[i] = data1[i] + data2[i];
+                }
+                new_matrix, err = NewMatrixWithData(m.GetRowNum(), m.GetColumeNum(), data3);
+            }
+        }
+        return new_matrix, err;
+    } else {
+
+        var err error = nil;
+        var new_matrix *Matrix = nil;
+        var total_nums int = m.GetElementNum();
+        var v_type ElementType = elementTypeFromInterface(v);
+
+        if v_type == ElementFloat64 && m.GetElementType() == ElementFloat64 {
+            var data1 []float64 = nil;
+            var data2 []float64 = nil;
+            vv := v.(float64);
+            data1, err = m.GetFloat64();
+            if err == nil {
+                data2 = make([]float64, total_nums, total_nums);
+                for i := 0; i < total_nums; i++ {
+                    data2[i] = data1[i] + vv;
+                }
+                new_matrix, err = NewMatrixWithData(m.GetRowNum(), m.GetColumeNum(), data2);
+            }
+
+        } else if v_type == ElementComplex128 && m.GetElementType() == ElementComplex128 {
+            vv := v.(complex128);
+            var data1 []complex128 = nil;
+            var data2 []complex128 = nil;
+
+            data1, err = m.GetComplex128();
+            if err == nil {
+                data2 = make([]complex128, total_nums, total_nums);
+                for i := 0; i < total_nums; i++ {
+                    data2[i] = data1[i] + vv;
+                }
+                new_matrix, err = NewMatrixWithData(m.GetRowNum(), m.GetColumeNum(), data2);
+            }
+        }
+        return new_matrix, err;
+    }
+    return nil, ErrorElementTypeUnmatched;
+}
+
+func (m *Matrix) Transpose() *Matrix {
+    row_num := m.GetRowNum();
+    col_num := m.GetColumeNum();
+    total_nums := m.GetElementNum();
+    data := reflect.MakeSlice(reflect.TypeOf(m.data), total_nums, total_nums);
+    i := 0;
+    for r := 0; r < row_num; r++ {
+        for c := 0; c < col_num; c++ {
+            v := data.Index(i);
+            vv := m.Get(c, r);
+            v.Set(reflect.ValueOf(vv));
+            i += 1;
+        }
+    }
+    new_matrix, _ := NewMatrixWithData(m.GetColumeNum(), m.GetRowNum(), data);
+    return new_matrix;
+}
 
 func (m *Matrix) RBind(other *Matrix) (*Matrix, error) {
     if m.GetColumeNum() != other.GetColumeNum() {
@@ -215,21 +461,20 @@ func (m *Matrix) GetFloat64() ([]float64, error) {
         return nil, ErrorMatrixIsEmpty;
     }
     if m.GetElementType() == ElementFloat64 {
-        return nil, ErrorElementTypeUnmatched;
+        return m.data.([]float64), nil;
     }
-    return m.data.([]float64), nil;
+    return nil, ErrorElementTypeUnmatched;
 }
 
 func (m *Matrix) GetComplex128() ([]complex128, error) {
     if m.GetElementType() == ElementUnknown || m.data == nil {
         return nil, ErrorMatrixIsEmpty;
     }
-    if m.GetElementType() != ElementComplex64 {
-        return nil, ErrorElementTypeUnmatched;
+    if m.GetElementType() == ElementComplex128 {
+        return m.data.([]complex128), nil;
     }
-    return m.data.([]complex128), nil;
+    return nil, ErrorElementTypeUnmatched;
 }
-
 
 func createDataSlice(element_type ElementType, element_nums int) (interface{}, error) {
 
