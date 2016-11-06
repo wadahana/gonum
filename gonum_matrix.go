@@ -342,6 +342,7 @@ func (m *Matrix) Add(v interface{}) (*Matrix, error) {
             }
         }
         return new_matrix, err;
+
     } else {
 
         var err error = nil;
@@ -387,15 +388,17 @@ func (m *Matrix) Transpose() *Matrix {
     total_nums := m.GetElementNum();
     data := reflect.MakeSlice(reflect.TypeOf(m.data), total_nums, total_nums);
     i := 0;
+    fmt.Printf("%d,%d", row_num, col_num);
     for r := 0; r < row_num; r++ {
         for c := 0; c < col_num; c++ {
             v := data.Index(i);
-            vv := m.Get(c, r);
+            vv := m.Get(r, c);
+            fmt.Printf("(%d,%d) vv: %v\n", c, r, vv);
             v.Set(reflect.ValueOf(vv));
             i += 1;
         }
     }
-    new_matrix, _ := NewMatrixWithData(m.GetColumeNum(), m.GetRowNum(), data);
+    new_matrix, _ := NewMatrixWithData(m.GetColumeNum(), m.GetRowNum(), data.Interface());
     return new_matrix;
 }
 

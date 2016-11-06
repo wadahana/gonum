@@ -166,7 +166,8 @@ func Test_Matrix(t *testing.T) {
         }
         t.Logf("\n%v\n", m4);
     }
-
+    m2 = m1.Transpose();
+    t.Logf("\n%v\n", m2);
 
     return;
 }
