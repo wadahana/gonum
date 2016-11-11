@@ -3,6 +3,7 @@
 tags
 *.log
 *.o
+third_party/OpenBLAS
 third_party/alglib.3.10.0/bin
 third_party/alglib.3.10.0/objs
 third_party/example/bin
