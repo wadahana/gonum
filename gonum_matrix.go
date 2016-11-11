@@ -393,7 +393,6 @@ func (m *Matrix) Transpose() *Matrix {
         for c := 0; c < col_num; c++ {
             v := data.Index(i);
             vv := m.Get(r, c);
-            fmt.Printf("(%d,%d) vv: %v\n", c, r, vv);
             v.Set(reflect.ValueOf(vv));
             i += 1;
         }
