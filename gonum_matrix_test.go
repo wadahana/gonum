@@ -55,6 +55,13 @@ func Test_Matrix(t *testing.T) {
         return;
     }
 
+    m3, err := m2.GetColumesByIndex(1,3,2);
+    if err != nil {
+        t.Errorf("GetColumesByIndex fail, Error: %v\n", err);
+        return ;
+    }
+    t.Logf("\n%v\n", m3);
+
     err = m1.Set(2,2, 100.2);
     if err == nil {
         v := m1.Get(2,2).(float64);
@@ -77,7 +84,7 @@ func Test_Matrix(t *testing.T) {
         return;
     }
 
-    m3, err := m1.CBind(m2);
+    m3, err = m1.CBind(m2);
     if err != nil {
         t.Errorf("CBind fail, Error: %v\n", err);
         return ;

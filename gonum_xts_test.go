@@ -60,10 +60,21 @@ var xts2_time = [] time.Time {
 }
 
 func Test_Xts(t *testing.T) {
+    XtsDemo(t);
+//    XtsTest(t);
+}
+
+func XtsTest (t *testing.T) {
+
+}
+
+func XtsDemo(t *testing.T) {
+
     var m0 *Matrix = nil;
     var x0 *Xts = nil;
     var err error = nil;
 
+    t.Logf("Xts Setter/Getter Demo .....\n")
     m0, err = NewMatrixWithData(5, 4, xts0_data);
     if err == nil {
         x0, err = NewXts(xts0_time, m0);
@@ -86,6 +97,7 @@ func Test_Xts(t *testing.T) {
         return;
     }
 
+    t.Logf("Xts SetName()/GetNames() Demo .....\n")
     var m1 *Matrix = nil;
     var x1 *Xts = nil;
 
@@ -97,10 +109,36 @@ func Test_Xts(t *testing.T) {
         t.Errorf("New Xts Test fail, Error: %v\n", err);
         return ;
     }
-    x1.SetName("Col_A", "Col_B", "Col_C", "Col_D", "Col_D");
+    err = x1.SetName("Col_A", "Col_B", "Col_C", "Col_D", "Col_E");
+    if err != nil {
+        t.Errorf("Xts SetName fail, Error: %v\n", err);
+        return ;
+    }
     t.Logf("x1:\n%v\n", x1);
 
+    l_name := x1.GetName();
+    var col_name string = "";
+    for _, name := range l_name {
+        col_name = col_name + ",  " + name ;
+    }
+    t.Logf("Colume Name: %v\n", col_name);
 
+    t.Logf("Xts GetColumesByIndex()/GetColumesByName() Demo .....\n")
+    sub1, err := x1.GetColumesByIndex(1,3,2,2);
+    if err != nil {
+        t.Errorf("Xts GetColumesByIndex() Test fail, Error: %v\n", err);
+        return ;
+    }
+    t.Logf("\n%v\n", sub1);
+
+    sub2, err := x1.GetColumesByName("Col_A", "Col_D", "Col_D", "Col_B");
+    if err != nil {
+        t.Errorf("Xts GetColumesByName() Test fail, Error: %v\n", err);
+        return ;
+    }
+    t.Logf("\n%v\n", sub2);
+
+    t.Logf("Xts CBind()/RBind() Demo .....\n")
     var m2 *Matrix = nil;
     var x2 *Xts = nil;
 
@@ -128,6 +166,7 @@ func Test_Xts(t *testing.T) {
         return ;
     }
     t.Logf("x0 row bind with x2: \n%v\n", rbx);
+
 
 
 }

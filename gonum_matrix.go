@@ -445,6 +445,24 @@ func (m *Matrix) CBind(other *Matrix) (*Matrix, error) {
     return matrix, err;
 }
 
+func (m *Matrix) GetColumesByIndex(l_col_index ... int) (*Matrix, error) {
+    for _, c := range l_col_index {
+        if c >= m.GetColumeNum() {
+            return nil, ErrorInvalidParameter;
+        }
+    }
+
+    data := reflect.MakeSlice(reflect.TypeOf(m.data), 0, 0);
+    for _, c := range l_col_index {
+        v := reflect.ValueOf(m.data);
+        i := c * m.GetRowNum();
+        col := v.Slice(i, i + m.GetRowNum());
+        data = reflect.AppendSlice(data, col);
+    }
+    sub_matrix, err := NewMatrixWithData(m.GetRowNum(), len(l_col_index), data.Interface());
+    return sub_matrix, err;
+}
+
 func (m *Matrix) GetColumeData(col int) (interface{}, error) {
     if col >= m.GetColumeNum() {
         return nil, ErrorInvalidParameter;
