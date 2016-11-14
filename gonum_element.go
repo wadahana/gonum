@@ -17,7 +17,7 @@ const (
     ElementUnknown    = ElementType(reflect.Invalid)
     ElementFloat32    = ElementType(reflect.Float32)
     ElementFloat64    = ElementType(reflect.Float64)
-    ElementComplex64 = ElementType(reflect.Complex64)
+    ElementComplex64  = ElementType(reflect.Complex64)
     ElementComplex128 = ElementType(reflect.Complex128)
 )
 

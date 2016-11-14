@@ -7,7 +7,7 @@ import (
 
 /*
 #cgo CFLAGS: -Wall -Wno-unused-variable -Wno-unused-function -I"./third_party/target/include"
-#cgo LDFLAGS: -L./third_party/target/lib -lopenblas
+#cgo LDFLAGS: -L/usr/local/lib -lopenblas
 
 
 #include <complex.h>
@@ -388,7 +388,7 @@ func (m *Matrix) Transpose() *Matrix {
     total_nums := m.GetElementNum();
     data := reflect.MakeSlice(reflect.TypeOf(m.data), total_nums, total_nums);
     i := 0;
-    fmt.Printf("%d,%d", row_num, col_num);
+//    fmt.Printf("%d,%d", row_num, col_num);
     for r := 0; r < row_num; r++ {
         for c := 0; c < col_num; c++ {
             v := data.Index(i);

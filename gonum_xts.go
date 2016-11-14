@@ -42,7 +42,7 @@ func NewXts(index []time.Time, m *Matrix) (*Xts, error) {
     if len(index) != row_nums {
         return nil, ErrorDimUnmatched;
     }
-    if m == nil || m.GetElementType() == ElementUnknown {
+    if m == nil || m.data == nil || m.GetElementType() == ElementUnknown {
         return nil, ErrorElementTypeNotSet
     }
 
@@ -159,7 +159,7 @@ func (this *Xts) GetColumesByIndex(l_col_index ... int) (*Xts, error) {
 
 func (this *Xts) GetColumesByName(l_name ... string) (*Xts, error) {
 
-    l_index := this.GetColumeIndexByName(l_name);
+    l_index := this.GetColumeIndexByName(l_name...);
     return this.GetColumesByIndex(l_index...);
 }
 
@@ -380,7 +380,6 @@ func (this *Xts) CBind(other* Xts) (*Xts, error) {
     return x, err;
 }
 
-
 func isDuplicate(l_name []string) bool {
     _map := make(map[string]int);
     for i, name := range l_name {
@@ -413,5 +412,142 @@ func createNaNSlice(element_type ElementType, size int) interface{} {
     return result;
 }
 
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+func matrix_diff_by_colume(m *Matrix, lag int) (*Matrix, error) {
+
+    if m.GetElementType() == ElementUnknown || m.data == nil {
+        return nil, ErrorMatrixIsEmpty;
+    }
+    row_num := m.GetRowNum();
+    col_num := m.GetColumeNum();
+    if lag >= row_num {
+        return nil, ErrorInvalidParameter;
+    }
+    var i_data interface{} = nil;
+
+    if m.GetElementType() == ElementFloat64 {
+        new_data := make([]float64, 0, m.GetElementNum());
+        for c := 0; c < col_num; c++ {
+            col, err := m.GetColumeData(c);
+            if err != nil {
+                return nil, err;
+            }
+            col_data := col.([]float64);
+            for i := 0; i < lag; i++ {
+                new_data = append(new_data, math.NaN());
+            }
+            for i := 0; i < row_num - lag; i++ {
+                v1, v2 := col_data[i], col_data[i+lag];
+                new_data = append(new_data, (v2 - v1));
+            }
+        }
+        i_data = interface{}(new_data);
+    } else if m.GetElementType() == ElementComplex128 {
+        new_data := make([]complex128, 0, m.GetElementNum());
+        for c := 0; c < col_num; c++ {
+            col, err := m.GetColumeData(c);
+            if err != nil {
+                return nil, err;
+            }
+            col_data := col.([]complex128);
+            for i := 0; i < lag; i++ {
+                new_data = append(new_data, cmplx.NaN());
+            }
+            for i := 0 ; i < row_num - lag; i++ {
+                v1, v2 := col_data[i], col_data[i+lag];
+                new_data = append(new_data, (v2 - v1));
+            }
+            i_data = interface{}(new_data);
+        }
+    }
+
+    if i_data == nil {
+        return nil, ErrorElementTypeUnmatched;
+    }
+    return NewMatrixWithData(row_num, col_num, i_data);
+}
+
+func (this *Xts) Diff(lag int) (*Xts, error) {
+
+    new_matrix, err := matrix_diff_by_colume(this.matrix, lag);
+    if err == nil {
+        return NewXts(this.index, new_matrix);
+    }
+    return nil, err;
+}
+
+func (this *Xts) LogDiff(lag int) (*Xts, error) {
+    m1, err := this.matrix.Log();
+    if err != nil {
+        return nil, err;
+    }
+    m2, err := matrix_diff_by_colume(m1, lag);
+    if err != nil {
+        return nil, err;
+    }
+    xts, err := NewXts(this.index, m2);
+    return xts, err;
+}
+
+func (this *Xts) ReplaceNaN(val interface{}) {
+    size := this.GetElementNum();
+    if this.GetElementType() == ElementFloat64 {
+        data := this.matrix.data.([]float64);
+        for i := 0; i < size; i++ {
+            if math.IsNaN(data[i]) {
+                data[i] = val.(float64);
+            }
+        }
+    } else if this.GetElementType() == ElementComplex128 {
+        data := this.matrix.data.([]complex128);
+        for i := 0; i < size; i++ {
+            if cmplx.IsNaN(data[i]) {
+                data[i] = val.(complex128);
+            }
+        }
+    }
+    return;
+}
+
+func (this *Xts) SMA(lag int) (*Xts, error) {
+     if this.GetElementType() != ElementFloat64 || this.matrix.data == nil {
+        return nil, ErrorElementTypeUnmatched;
+    }
+    row_num := this.GetRowNum();
+    col_num := this.GetColumeNum();
+    if lag >= row_num {
+        return nil, ErrorInvalidParameter;
+    }
+
+    var new_data []float64 = make([]float64, 0, this.GetElementNum());
+    for c := 0; c < col_num; c++ {
+        col, err := this.GetColumeData(c);
+        if err != nil {
+            return nil, err;
+        }
+        col_data := col.([]float64);
+        var sum float64 = 0
+        var i int = 0;
+        for i = 0; i < lag-1; i += 1 {
+            new_data = append(new_data, math.NaN());
+            sum = sum + col_data[i]
+        }
+        sum = sum + col_data[i];
+        sma := sum / float64(lag);
+        new_data = append(new_data, sma);
+        for i = i + 1; i < row_num; i += 1 {
+        //  fmt.Printf("%d, %f + %f - %f\n", i, sum, col_data[i], col_data[i-lag])
+            sum = sum + col_data[i] - col_data[i-lag]
+            sma = sum / float64(lag);
+            new_data = append(new_data, sma);
+        }
+    }
+    var i_data interface{} = interface{}(new_data);
+    matrix, err := NewMatrixWithData(row_num, col_num, i_data);
+    if err != nil {
+        return nil, err;
+    }
+    return NewXts(this.GetTimeIndex(), matrix);
+}
 

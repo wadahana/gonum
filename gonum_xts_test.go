@@ -167,6 +167,19 @@ func XtsDemo(t *testing.T) {
     }
     t.Logf("x0 row bind with x2: \n%v\n", rbx);
 
+    t.Logf("Xts Math Api Demo .....\n");
+    err = x0.Set(1,1, 101.5);
+    x3, err := x0.Diff(1);
+    if err != nil {
+        t.Errorf("Xts.Diff Test fail, Error: %v\n", err);
+    }
+    t.Logf("\n%v\n",x3);
+
+    x3, err = x0.LogDiff(1);
+    if err != nil {
+        t.Errorf("Xts.LogDiff Test fail, Error: %v\n", err);
+    }
+    t.Logf("\n%v\n",x3);
 
 
 }

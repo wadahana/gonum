@@ -57,6 +57,20 @@ func Min(data []float64) (int, float64) {
     return idx, min;
 }
 
+func MaxAndMin(data []float64) (float64, float64) {
+    min := data[0];
+    max := data[0];
+    for _, v := range data {
+        if v < min {
+            min = v;
+        }
+        if v > max {
+            max = v;
+        }
+    }
+    return max, min;
+}
+
 func Sum(data []float64) float64 {
     var sum float64 = 0;
     for _, v := range data {
